@@ -63,13 +63,10 @@ docker exec toeic_mysql mysqldump -u root -p12345678 --routines --triggers toeic
 
 ### 📥 Khôi phục dữ liệu (khi nhận backup từ người khác):
 
-Bước 1: Clone code và build Docker
+Bước 1: Build Docker
 ```bash
-git clone <repository-url>
-cd <project-folder>
 docker-compose up --build -d
 ```
-
 Bước 2: Copy file backup vào container
 ```bash
 docker cp backup.sql toeic_mysql:/backup.sql
@@ -77,7 +74,7 @@ docker cp backup.sql toeic_mysql:/backup.sql
 
 Bước 3: Khôi phục dữ liệu
 ```bash
-docker exec -it toeic_mysql mysql -u root -p12345678 toeic_db < /backup.sql
+docker exec -i toeic_mysql mysql -u root -p12345678 toeic_db < backup.sql
 ```
 
 Hoặc cách khác (vào trong container):
