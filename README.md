@@ -16,7 +16,6 @@
 
 ## Sau khi clone code về:
 - Tạo file .env, copy nội dung từ .env.example vào 
-- Kiểm tra Node version >= 18
 
 ## 🐳 Khởi chạy ứng dụng
 
