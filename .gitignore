@@ -1,0 +1,17 @@
+node_modules/
+npm-debug.log*
+
+
+.env
+
+logs/
+*.log
+debug.log
+
+uploads/
+
+.vscode/
+.idea/
+
+
+
