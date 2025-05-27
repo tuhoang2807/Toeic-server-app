@@ -122,7 +122,7 @@ docker-compose restart mysql  # Restart MySQL
 ---
 
 ## 📋 Thông tin kết nối
-
+- Vào extensions, tải SQL Tool, SQL Driver (MariaDB)
 - API Server: `http://localhost:8000`  
 - MySQL Host: `localhost:3307`  
 - Database: `toeic_db`  
