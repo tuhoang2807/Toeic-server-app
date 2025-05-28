@@ -11,8 +11,11 @@ router.delete('/question-practice/delete/:id',authenticate, questionPracticeCont
 router.post('/question-practice/random-by-topic-and-skill',authenticate, questionPracticeController.questionPracticeRandomByTopicAndSkill);
 router.get('/question-practice/get-question-by-topic', authenticate, questionPracticeController.getTotalQuestionByTopic);
 
+
 router.post('/practice-answer-question', authenticate, questionPracticeController.practiceAnswerQuestion);
 router.post('/practice-session-result', authenticate, questionPracticeController.getPracticeSessionResult);
 router.get('/practice-statistical', authenticate, questionPracticeController.getPracticeStatistical);
+router.get('/question-practice/get-practice-statistical-by-topic', authenticate, questionPracticeController.getPracticeStatisticalByTopic);
+router.get('/question-practice/get-total-question-by-topic-and-skill', authenticate, questionPracticeController.getTotalQuestionByTopicAndSkill);
 
 module.exports = router;

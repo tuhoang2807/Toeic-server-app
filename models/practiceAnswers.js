@@ -7,6 +7,10 @@ const PracticeAnswer = sequelize.define('PracticeAnswer', {
     primaryKey: true,
     autoIncrement: true
   },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
   session_id: {
     type: DataTypes.INTEGER,
     allowNull: false

@@ -135,6 +135,7 @@ class QuestionPracticeController {
   }
 
   async practiceAnswerQuestion(req, res) {
+    const userId = req.user.user_id;
     try {
       const { sessionId, questionId, answer, time_taken_seconds } = req.body;
 
@@ -158,12 +159,14 @@ class QuestionPracticeController {
         question.correct_answer.trim().toUpperCase() ===
         answer.trim().toUpperCase();
       const data = {
+        user_id: userId,
         session_id: sessionId,
         question_id: questionId,
         user_answer: answer,
         is_correct: isCorrect,
         time_taken_seconds: time_taken_seconds,
       };
+      console.log("Data to save:", data);
       const savedAnswer = await PracticeAnSwerService.answerQuestion(data);
       return res.status(200).json({
         status: 200,
@@ -184,8 +187,7 @@ class QuestionPracticeController {
 
   async getPracticeSessionResult(req, res) {
     try {
-      const { sessionId } = req.body;
-      console.log("Session ID:", sessionId);
+      const { sessionId , totalTime } = req.body;
       const userId = req.user.user_id;
       if (!sessionId) {
         return res.status(400).json({
@@ -204,13 +206,7 @@ class QuestionPracticeController {
       }
 
       const correctAnswers = answers.filter((ans) => ans.is_correct).length;
-      console.log("Correct Answers:", correctAnswers);
       const wrongAnswers = answers.filter((ans) => !ans.is_correct).length;
-      console.log("Wrong Answers:", wrongAnswers);
-      const totalTime = answers.reduce(
-        (acc, curr) => acc + curr.time_taken_seconds,
-        0
-      );
       const totalQuestions = answers.length;
       const score = ((correctAnswers / totalQuestions) * 100).toFixed(2);
       const data = {
@@ -225,8 +221,6 @@ class QuestionPracticeController {
         data,
         userId
       );
-
-      console.log("Updated Session:", session);
 
       res.status(200).json({
         status: 200,
@@ -263,6 +257,55 @@ class QuestionPracticeController {
       res.status(500).json({
         status: 500,
         message: "Lỗi khi thống kê tiến độ.",
+        error: err.message,
+      });
+    }
+  }
+
+  async getPracticeStatisticalByTopic(req, res) {
+    try {
+      const { topicId } = req.body;
+      const userId = req.user.user_id;
+      const stats = await QuestionPracticeService.getPracticeStatisticalByTopic(userId,topicId);
+      return res.status(200).json({
+        status: 200,
+        message: "Thống kê tiến độ theo chủ đề thành công",
+        data: stats,
+      });
+    } catch (error) {
+      return res.status(500).json({
+         status: 500,
+        message: "Lỗi khi thống kê tiến độ theo chủ đề.",
+        error: error.message,
+      });
+    }
+  }
+
+  async getTotalQuestionByTopicAndSkill(req, res) {
+    try {
+      const { skillId } = req.body;
+      const userId = req.user.user_id;
+
+      if (!skillId) {
+        return res.status(400).json({
+          status: 400,
+          message: "Thiếu thông tin cần thiết",
+        });
+      }
+
+      const totalQuestions =
+        await QuestionPracticeService.getTotalQuestionByTopicAndSkill(
+          userId,
+          skillId,
+        );
+      res.status(200).json({
+        status: 200,
+        total_questions: totalQuestions,
+      });
+    } catch (err) {
+      res.status(500).json({
+        status: 500,
+        message: "Lỗi khi lấy tổng số câu hỏi theo chủ đề và kỹ năng.",
         error: err.message,
       });
     }

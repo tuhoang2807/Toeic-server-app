@@ -118,12 +118,14 @@ CREATE TABLE practice_sessions (
 -- 8. BẢNG PRACTICE_ANSWERS - Lưu chi tiết câu trả lời trong phiên luyện tập
 CREATE TABLE practice_answers (
     answer_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL, -- ID người dùng
     session_id INT NOT NULL, -- ID phiên luyện tập
     question_id INT NOT NULL, -- ID câu hỏi
     user_answer VARCHAR(5), -- Câu trả lời của user (A, B, C, D hoặc null nếu bỏ qua)
     is_correct BOOLEAN, -- Câu trả lời có đúng không
     time_taken_seconds INT, -- Thời gian làm câu này (giây)
     answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (session_id) REFERENCES practice_sessions(session_id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES questions_practice(question_id) ON DELETE CASCADE
 );
@@ -149,12 +151,14 @@ CREATE TABLE test_attempts (
 -- 10. BẢNG TEST_ANSWERS - Lưu chi tiết câu trả lời trong bài thi
 CREATE TABLE test_answers (
     answer_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL, -- ID người dùng
     attempt_id INT NOT NULL, -- ID lần làm bài thi
     question_id INT NOT NULL, -- ID câu hỏi
     user_answer VARCHAR(5), -- Câu trả lời của user
     is_correct BOOLEAN, -- Câu trả lời có đúng không
     time_taken_seconds INT, -- Thời gian làm câu này
     answered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (attempt_id) REFERENCES test_attempts(attempt_id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES questions_test(question_id) ON DELETE CASCADE
 );
@@ -402,10 +406,12 @@ INSERT INTO practice_sessions (user_id, skill_id, topic_id, total_questions, cor
 (2, 4, 6, 10, 8, 540, 80.00, '2024-01-19 11:30:00');
 
 -- Practice Answers cho session đầu tiên  
-INSERT INTO practice_answers (session_id, question_id, user_answer, is_correct, time_taken_seconds) VALUES
-(1, 1, 'A', 1, 45),
-(1, 2, 'C', 0, 60),
-(1, 3, 'B', 1, 50);
+-- Practice Answers cho session đầu tiên  
+INSERT INTO practice_answers (user_id, session_id, question_id, user_answer, is_correct, time_taken_seconds) VALUES
+(2, 1, 1, 'A', 1, 45),
+(2, 1, 2, 'C', 0, 60),
+(2, 1, 3, 'B', 1, 50);
+
 
 -- Test Attempts của user John Doe
 INSERT INTO test_attempts (user_id, test_set_id, total_questions, correct_answers, listening_score, reading_score, total_score, time_taken_seconds, started_at, completed_at, status) VALUES
@@ -436,15 +442,15 @@ INSERT INTO study_time_log (user_id, activity_type, skill_id, topic_id, session_
 -- DỮ LIỆU LEADERBOARD
 -- ====================================================
 
-INSERT INTO leaderboard (user_id, category, best_score, total_attempts) VALUES
-(2, 'listening', 85.00, 5),
-(2, 'reading', 90.00, 4),
-(2, 'vocabulary', 75.00, 3),
-(2, 'grammar', 80.00, 2),
-(2, 'mini_test', 770.00, 1),
-(2, 'full_test', 855.00, 1),
-(3, 'listening', 78.00, 3),
-(3, 'reading', 82.00, 4),
-(3, 'mini_test', 745.00, 2),
-(4, 'listening', 70.00, 2),
-(4, 'vocabulary', 65.00, 1);
+-- INSERT INTO leaderboard (user_id, category, best_score, total_attempts) VALUES
+-- (2, 'listening', 85.00, 5),
+-- (2, 'reading', 90.00, 4),
+-- (2, 'vocabulary', 75.00, 3),
+-- (2, 'grammar', 80.00, 2),
+-- (2, 'mini_test', 770.00, 1),
+-- (2, 'full_test', 855.00, 1),
+-- (3, 'listening', 78.00, 3),
+-- (3, 'reading', 82.00, 4),
+-- (3, 'mini_test', 745.00, 2),
+-- (4, 'listening', 70.00, 2),
+-- (4, 'vocabulary', 65.00, 1);
