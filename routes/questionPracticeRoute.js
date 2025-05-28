@@ -9,6 +9,7 @@ router.post('/question-practice/create',authenticate, questionPracticeController
 router.put('/question-practice/update/:id',authenticate, questionPracticeController.questionPracticeUpdate);
 router.delete('/question-practice/delete/:id',authenticate, questionPracticeController.questionPracticeDelete);
 router.post('/question-practice/random-by-topic-and-skill',authenticate, questionPracticeController.questionPracticeRandomByTopicAndSkill);
+router.get('/question-practice/get-question-by-topic', authenticate, questionPracticeController.getTotalQuestionByTopic);
 
 router.post('/practice-answer-question', authenticate, questionPracticeController.practiceAnswerQuestion);
 router.post('/practice-session-result', authenticate, questionPracticeController.getPracticeSessionResult);

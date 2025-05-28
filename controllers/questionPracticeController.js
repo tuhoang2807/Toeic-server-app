@@ -267,6 +267,30 @@ class QuestionPracticeController {
       });
     }
   }
+
+  async getTotalQuestionByTopic(req, res) {
+    try {
+      const { topicId } = req.body;
+      if (!topicId) {
+        return res.status(400).json({
+          status: 400,
+          message: "Thiếu topicId",
+        });
+      }
+      const totalQuestions =
+        await QuestionPracticeService.getTotalQuestionByTopic(topicId);
+      res.status(200).json({
+        status: 200,
+        total_questions: totalQuestions,
+      });
+    } catch (err) {
+      res.status(500).json({
+        status: 500,
+        message: "Lỗi khi lấy tổng số câu hỏi theo chủ đề.",
+        error: err.message,
+      });
+    }
+  }
 }
 
 module.exports = new QuestionPracticeController();

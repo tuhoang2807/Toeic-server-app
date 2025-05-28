@@ -69,6 +69,13 @@ class QuestionPracticeService {
     );
     return stats;
   }
+
+  async getTotalQuestionByTopic(topicId) {
+    const totalQuestions = await QuestionPractice.count({
+      where: { topic_id: topicId, is_active: true },
+    });
+    return totalQuestions;
+  }
 }
 
 module.exports = new QuestionPracticeService();
