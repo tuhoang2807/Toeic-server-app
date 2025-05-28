@@ -25,6 +25,7 @@ CREATE TABLE topics (
     name VARCHAR(100) NOT NULL, -- Tên chủ đề
     slug VARCHAR(100) UNIQUE NOT NULL, -- Slug cho URL hoặc truy vấn
     description TEXT, -- Mô tả chủ đề
+    image_url VARCHAR(255), -- Link ảnh đại diện cho chủ đề
     is_active BOOLEAN DEFAULT TRUE, -- Chủ đề có hoạt động không
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian tạo
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Thời gian cập nhật
