@@ -7,6 +7,7 @@ const topicRoutes = require("./routes/topicRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const skillRoutes = require("./routes/skillRoutes");
 const practiceRoutes = require("./routes/questionPracticeRoute");
+const testRoutes = require("./routes/testRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -22,7 +23,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/topics', topicRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/practice', practiceRoutes);
-
+app.use('/api/tests', testRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TOEIC App đang chạy...' });

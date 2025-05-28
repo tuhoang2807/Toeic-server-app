@@ -40,43 +40,46 @@ class UserService {
       email_verified: false,
     });
   }
-
-  // Cập nhật thông tin người dùng
   async updateUser(userId, data) {
     const { username, full_name, avatar_url, phone, birth_date, email } = data;
     const user = await User.findByPk(userId);
-    if (!user)
+    if (!user) {
       throw new Error("Tài khoản không tồn tại, hãy đăng nhập để tiếp tục");
-    if (username) {
-      const existingUser = await User.findOne({ where: { username } });
-      if (existingUser && existingUser.id !== userId) {
-        throw new Error("Username đã được sử dụng");
+    }
+
+    const uniqueFields = { username, email, phone };
+    for (const [field, value] of Object.entries(uniqueFields)) {
+      if (value) {
+        const existingUser = await User.findOne({
+          where: {
+            [field]: value,
+            user_id: { [Op.ne]: userId }, // Thay đổi từ id thành user_id
+          },
+        });
+        if (existingUser) {
+          const fieldName =
+            field === "phone"
+              ? "Số điện thoại"
+              : field === "email"
+              ? "Email"
+              : "Username";
+          throw new Error(`${fieldName} đã được sử dụng`);
+        }
       }
     }
-    if (email) {
-      const existingUser = await User.findOne({ where: { email } });
-      if (existingUser && existingUser.id !== userId) {
-        throw new Error("Email đã được sử dụng");
-      }
-    }
-    if (phone) {
-      const existingUser = await User.findOne({ where: { phone } });
-      if (existingUser && existingUser.id !== userId) {
-        throw new Error("Số điện thoại đã được sử dụng");
-      }
-    }
+
     await user.update({
-      username: username || user.username,
-      full_name: full_name || user.full_name,
-      avatar_url: avatar_url || user.avatar_url,
-      phone: phone || user.phone,
-      birth_date: birth_date || user.birth_date,
-      email: email || user.email,
+      username: username ?? user.username,
+      full_name: full_name ?? user.full_name,
+      avatar_url: avatar_url ?? user.avatar_url,
+      phone: phone ?? user.phone,
+      birth_date: birth_date ?? user.birth_date,
+      email: email ?? user.email,
     });
+
     return this.getUserById(userId);
   }
 
-  // Đổi mật khẩu
   async changePassword(userId, oldPassword, newPassword) {
     const user = await User.findByPk(userId);
     if (!user) throw new Error("Người dùng không tồn tại");

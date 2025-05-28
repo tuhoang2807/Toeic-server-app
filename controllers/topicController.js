@@ -51,9 +51,9 @@ class TopicController {
   async deleteTopic(req, res) {
     try {
       await TopicService.deleteTopic(req.params.id);
-      res.json({ message: "Xóa topic thành công" });
+      res.json({status: 200, message: "Xóa topic thành công" });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({status: 400, error: error.message });
     }
   }
 }
