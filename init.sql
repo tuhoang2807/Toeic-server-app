@@ -142,7 +142,7 @@ CREATE TABLE test_attempts (
     correct_answers INT DEFAULT 0, -- Số câu trả lời đúng
     listening_score INT DEFAULT 0, -- Điểm Listening
     reading_score INT DEFAULT 0, -- Điểm Reading
-    total_score INT DEFAULT 0, -- Tổng điểm TOEIC
+    total_score FLOAT DEFAULT 0, -- Tổng điểm TOEIC
     time_taken_seconds INT, -- Thời gian làm bài thực tế
     started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian bắt đầu
     completed_at TIMESTAMP NULL, -- Thời gian hoàn thành

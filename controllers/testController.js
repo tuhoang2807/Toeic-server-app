@@ -64,7 +64,17 @@ class TestController {
     try {
       const { type } = req.body;
       const testSets = await TestSetService.getTestSetsByType(type);
-      res.status(200).json({ status: 200, testSets });
+      res.status(200).json({
+        status: 200,
+        data: testSets.map((t) => ({
+          test_set_id: t.test_set_id,
+          name: t.name,
+          type: t.type,
+          description: t.description,
+          created_at: t.created_at,
+          is_active: t.is_active,
+        })),
+      });
     } catch (error) {
       res.status(500).json({ status: 500, error: error.message });
     }
@@ -162,7 +172,7 @@ class TestController {
   // PHẦN LÀM BÀI KIỂM TRA
 
   async createAttempt(req, res) {
-    const testSetId = req.body.testSetId;
+    const { testSetId, TimeTaken } = req.body;
     const userId = req.user.user_id;
     const totalQuestions =
       await QuestionTestService.getTotalQuestionsByTestSetId(testSetId);
@@ -205,7 +215,7 @@ class TestController {
 
   async submitTest(req, res) {
     const userId = req.user.user_id;
-    const { attemptId, answers } = req.body;
+    const { attemptId, answers, timeTaken, testSetId } = req.body;
 
     if (!Array.isArray(answers) || !answers.length) {
       return res
@@ -214,18 +224,25 @@ class TestController {
     }
 
     try {
-
+      const totalQuestionTest =
+        await QuestionTestService.questionTestGetByTestSetId(testSetId);
+      const allQuestionIds = totalQuestionTest.map((q) => q.question_id);
       const questionIds = answers.map((a) => a.questionId);
-      const questionTests = await QuestionTestService.questionTestsGetByMultipleId(questionIds);
+      const questionTests =
+        await QuestionTestService.questionTestsGetByMultipleId(questionIds);
+      const abandonedQuestionIds = allQuestionIds.filter(
+        (id) => !questionIds.includes(id)
+      );
+
       if (!Array.isArray(questionTests)) {
         return res
           .status(500)
           .json({ status: 500, error: "Dữ liệu câu hỏi không hợp lệ" });
       }
 
-      const correctAnswerMap = new Map(questionTests.map((q) => [q.question_id, q.correct_answer]));
-
-      console.log("Correct Answer Map:", correctAnswerMap);
+      const correctAnswerMap = new Map(
+        questionTests.map((q) => [q.question_id, q.correct_answer])
+      );
 
       let correctCount = 0;
       answers.forEach((a) => {
@@ -250,13 +267,45 @@ class TestController {
       const testAnswers = await TestAnswerService.createAnswer(valuesToInsert);
 
       const resultWithCorrect = testAnswers.map((a) => ({
-        ...a.dataValues,
+        user_id: a.user_id,
+        attempt_id: a.attempt_id,
+        question_id: a.question_id,
+        user_answer: a.user_answer,
+        is_correct: a.is_correct,
         correct_answer: correctAnswerMap.get(a.question_id),
       }));
+
+      const dataToUpdateAttempt = {
+        user_id: userId,
+        correct_answers: correctCount,
+        status: "completed",
+        total_score: Number(
+          ((10 / totalQuestionTest.length) * correctCount).toFixed(2)
+        ),
+        time_taken_seconds: timeTaken,
+        completed_at: new Date(),
+      };
+
+      const testAttempt = await TestAttemptService.updateAttempt(
+        attemptId,
+        userId,
+        dataToUpdateAttempt
+      );
 
       return res.status(200).json({
         status: 200,
         message: "Nộp bài thành công",
+        attemptId: testAttempt.attempt_id,
+        attemptStatus: testAttempt.status,
+        totalQuestion: testAttempt.total_questions,
+        totalCorrectAnswer: testAttempt.correct_answers,
+        totalWrongAnswer:
+          testAttempt.total_questions -
+          testAttempt.correct_answers -
+          abandonedQuestionIds.length,
+        totalBlankAnswer: abandonedQuestionIds.length,
+        totalScore: testAttempt.total_score,
+        Time: testAttempt.time_taken_seconds,
         answers: resultWithCorrect,
       });
     } catch (error) {

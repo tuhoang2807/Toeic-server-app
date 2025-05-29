@@ -6,10 +6,14 @@ class TestAttemptService {
   }
 
   async updateAttempt(attemptId, userId, data) {
-    return await TestAtempt.update(data, {
-      where: { attempt_id: attemptId, user_id: userId },
-    });
-  }
+  await TestAtempt.update(data, {
+    where: { attempt_id: attemptId, user_id: userId },
+  });
+  return await TestAtempt.findOne({
+    where: { attempt_id: attemptId, user_id: userId },
+  });
+}
+
 }
 
 module.exports = new TestAttemptService();
