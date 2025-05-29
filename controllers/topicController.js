@@ -3,13 +3,15 @@ const TopicService = require("../services/topicService");
 class TopicController {
   async createTopic(req, res) {
     try {
-      const { skillId, name, description} = req.body;
-      if (!name || !description || !skillId) {
+      const { skill_id, name, slug ,description} = req.body;
+      if (!name || !description || !skill_id) {
         return res.status(400).json({ error: "Yêu cầu nhập đầy đủ thông tin" });
       }
+      console.log("body", req.body);
       const topic = await TopicService.createTopic({
-        skillId,
+        skill_id,
         name,
+        slug,
         description,
       });
 
