@@ -26,6 +26,12 @@ class TopicService {
     await topic.destroy();
     return true;
   }
+  
+  async getTopicsBySkillId(skillId) {
+    return await Topic.findAll({
+      where: { skill_id: skillId },
+    });
+  }
 }
 
 module.exports = new TopicService();

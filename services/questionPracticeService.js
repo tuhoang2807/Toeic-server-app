@@ -70,42 +70,6 @@ class QuestionPracticeService {
     return stats;
   }
 
-  async getPracticeStatisticalByTopic(userId, topicId) {
-    const stats = await sequelize.query(
-      `
-    SELECT 
-      s.skill_id,
-      s.name,
-      t.topic_id,
-      t.name AS topic_name,
-      COUNT(DISTINCT q.question_id) AS total_questions,
-      COALESCE(COUNT(DISTINCT CASE WHEN ps.user_id = :userId THEN pa.question_id END), 0) AS attempted,
-      COALESCE(SUM(CASE WHEN ps.user_id = :userId AND pa.is_correct = true THEN 1 ELSE 0 END), 0) AS correct,
-      CASE 
-        WHEN COALESCE(COUNT(DISTINCT CASE WHEN ps.user_id = :userId THEN pa.question_id END), 0) = 0 THEN 0
-        ELSE ROUND(
-          COALESCE(SUM(CASE WHEN ps.user_id = :userId AND pa.is_correct = true THEN 1 ELSE 0 END), 0) * 100.0 /
-          COALESCE(COUNT(DISTINCT CASE WHEN ps.user_id = :userId THEN pa.question_id END), 0), 
-          2
-        )
-      END AS accuracy
-    FROM skills s
-    LEFT JOIN questions_practice q ON q.skill_id = s.skill_id AND q.topic_id = :topicId
-    LEFT JOIN topics t ON t.topic_id = :topicId
-    LEFT JOIN practice_answers pa ON pa.question_id = q.question_id
-    LEFT JOIN practice_sessions ps ON ps.session_id = pa.session_id AND ps.user_id = :userId
-    WHERE t.topic_id = :topicId
-    GROUP BY s.skill_id, s.name, t.topic_id, t.name
-    ORDER BY s.skill_id, t.topic_id;
-    `,
-      {
-        replacements: { userId, topicId },
-        type: sequelize.QueryTypes.SELECT,
-      }
-    );
-    return stats;
-  }
-
   async getTotalQuestionByTopic(topicId) {
     const totalQuestions = await QuestionPractice.count({
       where: { topic_id: topicId, is_active: true },
@@ -116,34 +80,42 @@ class QuestionPracticeService {
   async getTotalQuestionByTopicAndSkill(userId, skillId) {
     const stats = await sequelize.query(
       `
-        SELECT 
-            t.topic_id,
-            t.name AS topic_name,
-            t.slug AS topic_slug,
-            COUNT(DISTINCT qp.question_id) AS total_questions,
-            COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) AS answered_questions
-        FROM topics t
-        LEFT JOIN questions_practice qp ON t.topic_id = qp.topic_id
-            AND qp.skill_id = :skillId
-            AND qp.is_active = TRUE
-        LEFT JOIN practice_answers pa ON qp.question_id = pa.question_id
-            AND pa.user_id = :userId
-        WHERE t.is_active = TRUE
-        GROUP BY t.topic_id, t.name, t.slug
-        ORDER BY t.topic_id ASC;
-        `,
+      SELECT 
+          t.topic_id,
+          t.name AS topic_name,
+          t.slug AS topic_slug,
+          COUNT(DISTINCT qp.question_id) AS total_questions,
+
+          COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) AS answered_questions,
+
+          COALESCE(SUM(CASE WHEN pa.user_id = :userId AND pa.is_correct = TRUE THEN 1 ELSE 0 END), 0) AS correct_answers,
+
+          CASE 
+              WHEN COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) = 0 THEN 0
+              ELSE ROUND(
+                  COALESCE(SUM(CASE WHEN pa.user_id = :userId AND pa.is_correct = TRUE THEN 1 ELSE 0 END), 0) * 100.0 /
+                  COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END),
+                  2
+              )
+          END AS accuracy_percentage
+
+      FROM topics t
+      LEFT JOIN questions_practice qp ON t.topic_id = qp.topic_id
+          AND qp.is_active = TRUE
+      LEFT JOIN practice_answers pa ON qp.question_id = pa.question_id
+          AND pa.user_id = :userId
+      WHERE t.is_active = TRUE
+        AND t.skill_id = :skillId
+      GROUP BY t.topic_id, t.name, t.slug
+      ORDER BY t.topic_id ASC;
+    `,
       {
         replacements: { userId, skillId },
         type: sequelize.QueryTypes.SELECT,
       }
     );
 
-    return stats.map((stat) => ({
-      topic_id: stat.topic_id,
-      topic_name: stat.topic_name,
-      total_questions: parseInt(stat.total_questions),
-      answered_questions: parseInt(stat.answered_questions),
-    }));
+    return stats;
   }
 }
 

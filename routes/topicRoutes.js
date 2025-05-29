@@ -9,4 +9,7 @@ router.get('/get-topic-by-id/:id', TopicController.getTopicById);
 router.put('/update-topic/:id',authenticate, isAdmin, TopicController.updateTopic);
 router.delete('/delete-topic/:id',authenticate, isAdmin, TopicController.deleteTopic);
 
+router.get('/get-topics-by-skill-id/:skillId', TopicController.getTopicsBySkillId);
+router.get('/getTopicsBySkillId/:skillId', TopicController.getTopicsBySkillId);
+
 module.exports = router;

@@ -3,14 +3,13 @@ const TopicService = require("../services/topicService");
 class TopicController {
   async createTopic(req, res) {
     try {
-      const { name, slug, description} = req.body;
-      if (!name || !slug) {
+      const { skillId, name, description} = req.body;
+      if (!name || !description || !skillId) {
         return res.status(400).json({ error: "Yêu cầu nhập đầy đủ thông tin" });
       }
-
       const topic = await TopicService.createTopic({
+        skillId,
         name,
-        slug,
         description,
       });
 
@@ -54,6 +53,18 @@ class TopicController {
       res.json({status: 200, message: "Xóa topic thành công" });
     } catch (error) {
       res.status(400).json({status: 400, error: error.message });
+    }
+  }
+
+  async getTopicsBySkillId(req, res) {
+    try {
+      const topics = await TopicService.getTopicsBySkillId(req.params.skillId);
+      if (!topics || topics.length === 0) {
+        return res.status(404).json({ error: "Không tìm thấy topic cho skill này" });
+      }
+      res.json(topics);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   }
 }

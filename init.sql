@@ -19,19 +19,7 @@ CREATE TABLE users (
 );
 
 
--- 2. BẢNG TOPICS - Quản lý chủ đề (Sport, School, Music, v.v.)
-CREATE TABLE topics (
-    topic_id INT PRIMARY KEY AUTO_INCREMENT, -- ID duy nhất cho chủ đề
-    name VARCHAR(100) NOT NULL, -- Tên chủ đề
-    slug VARCHAR(100) UNIQUE NOT NULL, -- Slug cho URL hoặc truy vấn
-    description TEXT, -- Mô tả chủ đề
-    image_url VARCHAR(255), -- Link ảnh đại diện cho chủ đề
-    is_active BOOLEAN DEFAULT TRUE, -- Chủ đề có hoạt động không
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian tạo
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- Thời gian cập nhật
-);
-
--- 3. BẢNG SKILLS - Quản lý 4 kỹ năng (Listening, Reading, Vocabulary, Grammar)
+-- 2. BẢNG SKILLS - Quản lý 4 kỹ năng (Listening, Reading, Vocabulary, Grammar)
 CREATE TABLE skills (
     skill_id INT PRIMARY KEY AUTO_INCREMENT, -- ID duy nhất cho kỹ năng
     name VARCHAR(50) NOT NULL, -- Tên kỹ năng
@@ -39,6 +27,21 @@ CREATE TABLE skills (
     description TEXT, -- Mô tả kỹ năng
     is_active BOOLEAN DEFAULT TRUE, -- Kỹ năng có hoạt động không
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Thời gian tạo
+);
+
+
+-- 3. BẢNG TOPICS - Quản lý chủ đề (Sport, School, Music, v.v.)
+CREATE TABLE topics (
+    topic_id INT PRIMARY KEY AUTO_INCREMENT, -- ID duy nhất cho chủ đề
+    skill_id INT NOT NULL, -- ID kỹ năng liên quan (Listening, Reading, v.v.)
+    name VARCHAR(100) NOT NULL, -- Tên chủ đề
+    slug VARCHAR(100) UNIQUE NOT NULL, -- Slug cho URL hoặc truy vấn
+    description TEXT, -- Mô tả chủ đề
+    image_url VARCHAR(255), -- Link ảnh đại diện cho chủ đề
+    is_active BOOLEAN DEFAULT TRUE, -- Chủ đề có hoạt động không
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Thời gian tạo
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Thời gian cập nhật
+    FOREIGN KEY (skill_id) REFERENCES skills(skill_id) ON DELETE CASCADE -- Liên kết với bảng skills
 );
 
 -- 4. BẢNG QUESTIONS_PRACTICE - Lưu tất cả câu hỏi (luyện tập)
@@ -289,20 +292,55 @@ DELIMITER ;
 -- ====================================================
 
 INSERT INTO skills (name, slug, description) VALUES
-('Listening', 'listening', 'Kỹ năng nghe hiểu'),
-('Reading', 'reading', 'Kỹ năng đọc hiểu'),
-('Vocabulary', 'vocabulary', 'Từ vựng'),
-('Grammar', 'grammar', 'Ngữ pháp');
+('Listening', 'listening', 'Kỹ năng nghe hiểu các đoạn hội thoại, tin tức, và tình huống hàng ngày.'),
+('Reading', 'reading', 'Kỹ năng đọc hiểu văn bản tiếng Anh như bài báo, truyện ngắn, và email.'),
+('Vocabulary', 'vocabulary', 'Tăng vốn từ vựng theo chủ đề như đồ ăn, du lịch, công nghệ.'),
+('Grammar', 'grammar', 'Ngữ pháp tiếng Anh bao gồm thì, câu điều kiện, mệnh đề, loại từ.');
 
-INSERT INTO topics (name, slug, description) VALUES
-('Sport', 'sport', 'Chủ đề thể thao'),
-('School', 'school', 'Chủ đề trường học'),
-('Music', 'music', 'Chủ đề âm nhạc'),
-('Travel', 'travel', 'Chủ đề du lịch'),
-('Technology', 'technology', 'Chủ đề công nghệ'),
-('Environment', 'environment', 'Chủ đề môi trường'),
-('Health', 'health', 'Chủ đề sức khỏe'),
-('Food', 'food', 'Chủ đề ẩm thực');
+
+-- 1. Listening Topics (skill_id = 1)
+INSERT INTO topics (skill_id, name, slug, description, image_url) VALUES
+(1, 'Sport', 'sport-listening', 'Nghe các đoạn hội thoại về thể thao.', 'https://picsum.photos/id/201/200'),
+(1, 'School', 'school-listening', 'Nghe tình huống ở trường học.', 'https://picsum.photos/id/202/200'),
+(1, 'Music', 'music-listening', 'Nghe về các thể loại nhạc và nghệ sĩ.', 'https://picsum.photos/id/203/200'),
+(1, 'Travel', 'travel-listening', 'Nghe các hội thoại khi đi du lịch.', 'https://picsum.photos/id/204/200'),
+(1, 'Technology', 'technology-listening', 'Nghe podcast về công nghệ.', 'https://picsum.photos/id/205/200'),
+(1, 'Environment', 'environment-listening', 'Nghe về các vấn đề môi trường.', 'https://picsum.photos/id/206/200'),
+(1, 'Health', 'health-listening', 'Nghe về sức khỏe và lối sống.', 'https://picsum.photos/id/207/200'),
+(1, 'Food', 'food-listening', 'Nghe mô tả món ăn và công thức.', 'https://picsum.photos/id/208/200');
+
+
+-- 2. Reading Topics (skill_id = 2)
+INSERT INTO topics (skill_id, name, slug, description, image_url) VALUES
+(2, 'Sport', 'sport-reading', 'Đọc bài viết về thể thao và vận động viên.', 'https://picsum.photos/id/301/200'),
+(2, 'School', 'school-reading', 'Đọc bài học, nội quy trường học.', 'https://picsum.photos/id/302/200'),
+(2, 'Music', 'music-reading', 'Đọc bài báo về âm nhạc và nghệ sĩ.', 'https://picsum.photos/id/303/200'),
+(2, 'Travel', 'travel-reading', 'Đọc cẩm nang du lịch.', 'https://picsum.photos/id/304/200'),
+(2, 'Technology', 'technology-reading', 'Đọc về phát minh và công nghệ mới.', 'https://picsum.photos/id/305/200'),
+(2, 'Environment', 'environment-reading', 'Đọc về bảo vệ môi trường.', 'https://picsum.photos/id/306/200'),
+(2, 'Health', 'health-reading', 'Đọc các mẹo sống khỏe.', 'https://picsum.photos/id/307/200'),
+(2, 'Food', 'food-reading', 'Đọc công thức và đánh giá món ăn.', 'https://picsum.photos/id/308/200');
+
+
+-- 3. Vocabulary Topics (skill_id = 3)
+INSERT INTO topics (skill_id, name, slug, description, image_url) VALUES
+(3, 'Sport', 'sport-vocabulary', 'Từ vựng liên quan đến thể thao.', 'https://picsum.photos/id/401/200'),
+(3, 'School', 'school-vocabulary', 'Từ vựng về trường học.', 'https://picsum.photos/id/402/200'),
+(3, 'Music', 'music-vocabulary', 'Từ vựng về âm nhạc, nhạc cụ.', 'https://picsum.photos/id/403/200'),
+(3, 'Travel', 'travel-vocabulary', 'Từ vựng khi đi du lịch.', 'https://picsum.photos/id/404/200'),
+(3, 'Technology', 'technology-vocabulary', 'Từ vựng công nghệ.', 'https://picsum.photos/id/405/200'),
+(3, 'Environment', 'environment-vocabulary', 'Từ vựng về môi trường.', 'https://picsum.photos/id/406/200'),
+(3, 'Health', 'health-vocabulary', 'Từ vựng về sức khỏe.', 'https://picsum.photos/id/407/200'),
+(3, 'Food', 'food-vocabulary', 'Từ vựng về món ăn, nấu ăn.', 'https://picsum.photos/id/408/200');
+
+
+-- 4. Grammar Topics (skill_id = 4)
+INSERT INTO topics (skill_id, name, slug, description, image_url) VALUES
+(4, 'Tenses', 'tenses', 'Các thì trong tiếng Anh: hiện tại, quá khứ, tương lai.', 'https://picsum.photos/id/1100/200'),
+(4, 'Conditional Sentences', 'conditional-sentences', 'Câu điều kiện loại 1, 2, 3.', 'https://picsum.photos/id/1110/200'),
+(4, 'Parts of Speech', 'parts-of-speech', 'Các loại từ: danh từ, động từ, trạng từ, tính từ.', 'https://picsum.photos/id/1120/200'),
+(4, 'Passive Voice', 'passive-voice', 'Câu bị động trong tiếng Anh.', 'https://picsum.photos/id/1130/200');
+
 
 INSERT INTO users (username, email, password_hash, full_name, role) VALUES
 ('admin', 'admin@toeicapp.com', '$2b$10$tsYG7z3.paHe4Mg6a1N8tOrVZ7P.b7GHdWMrzJ6l/E.O67q6VXri6', 'Administrator', 'admin'),

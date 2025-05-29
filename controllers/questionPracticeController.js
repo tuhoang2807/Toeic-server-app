@@ -166,7 +166,7 @@ class QuestionPracticeController {
         is_correct: isCorrect,
         time_taken_seconds: time_taken_seconds,
       };
-      console.log("Data to save:", data);
+     
       const savedAnswer = await PracticeAnSwerService.answerQuestion(data);
       return res.status(200).json({
         status: 200,
@@ -261,26 +261,7 @@ class QuestionPracticeController {
       });
     }
   }
-
-  async getPracticeStatisticalByTopic(req, res) {
-    try {
-      const { topicId } = req.body;
-      const userId = req.user.user_id;
-      const stats = await QuestionPracticeService.getPracticeStatisticalByTopic(userId,topicId);
-      return res.status(200).json({
-        status: 200,
-        message: "Thống kê tiến độ theo chủ đề thành công",
-        data: stats,
-      });
-    } catch (error) {
-      return res.status(500).json({
-         status: 500,
-        message: "Lỗi khi thống kê tiến độ theo chủ đề.",
-        error: error.message,
-      });
-    }
-  }
-
+  
   async getTotalQuestionByTopicAndSkill(req, res) {
     try {
       const { skillId } = req.body;
@@ -293,11 +274,7 @@ class QuestionPracticeController {
         });
       }
 
-      const totalQuestions =
-        await QuestionPracticeService.getTotalQuestionByTopicAndSkill(
-          userId,
-          skillId,
-        );
+      const totalQuestions = await QuestionPracticeService.getTotalQuestionByTopicAndSkill( userId,skillId );
       res.status(200).json({
         status: 200,
         total_questions: totalQuestions,

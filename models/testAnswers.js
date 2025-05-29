@@ -7,6 +7,10 @@ const TestAnswer = sequelize.define('test_answers', {
     primaryKey: true,
     autoIncrement: true,
   },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   attempt_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

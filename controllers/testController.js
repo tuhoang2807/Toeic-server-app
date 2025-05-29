@@ -1,6 +1,10 @@
 const TestSetService = require("../services/testSetService");
+const QuestionTestService = require("../services/questionTestService");
+const TestAttemptService = require("../services/testAttemptService");
+const TestAnswerService = require("../services/testAnswerService");
 
 class TestController {
+  // PHẦN ĐỀ THI
   async createTestSet(req, res) {
     try {
       const testSet = await TestSetService.createTestSet(req.body);
@@ -23,7 +27,9 @@ class TestController {
     try {
       const testSet = await TestSetService.getTestSetById(req.params.id);
       if (!testSet) {
-        return res.status(404).json({ status: 404, message: "Không tìm thấy thông tin bộ đề" });
+        return res
+          .status(404)
+          .json({ status: 404, message: "Không tìm thấy thông tin bộ đề" });
       }
       res.status(200).json(testSet);
     } catch (error) {
@@ -33,7 +39,10 @@ class TestController {
 
   async updateTestSet(req, res) {
     try {
-      const updatedTestSet = await TestSetService.updateTestSet(req.params.id, req.body);
+      const updatedTestSet = await TestSetService.updateTestSet(
+        req.params.id,
+        req.body
+      );
       res.status(200).json(updatedTestSet);
     } catch (error) {
       res.status(400).json({ status: 400, error: error.message });
@@ -43,7 +52,9 @@ class TestController {
   async deleteTestSet(req, res) {
     try {
       await TestSetService.deleteTestSet(req.params.id);
-      res.status(200).json({ status: 200, message: "Bộ đề đã được xóa thành công" });
+      res
+        .status(200)
+        .json({ status: 200, message: "Bộ đề đã được xóa thành công" });
     } catch (error) {
       res.status(400).json({ status: 400, error: error.message });
     }
@@ -53,9 +64,208 @@ class TestController {
     try {
       const { type } = req.body;
       const testSets = await TestSetService.getTestSetsByType(type);
-      res.status(200).json({status: 200, testSets});
+      res.status(200).json({ status: 200, testSets });
     } catch (error) {
       res.status(500).json({ status: 500, error: error.message });
+    }
+  }
+
+  //KẾT THÚC PHẦN ĐỀ THI
+
+  // PHẦN CÂU HỎI CHO BỘ ĐỀ THI
+  async createQuestionTest(req, res) {
+    try {
+      const questionTest = await QuestionTestService.questionTestCreate(
+        req.body
+      );
+      res.status(201).json({ status: 201, questionTest });
+    } catch (error) {
+      res.status(400).json({ status: 400, error: error.message });
+    }
+  }
+
+  async getAllQuestionTests(req, res) {
+    try {
+      const questionTests = await QuestionTestService.questionTestGetAll();
+      res.status(200).json(questionTests);
+    } catch (error) {
+      res.status(500).json({ status: 500, error: error.message });
+    }
+  }
+
+  async getQuestionTestById(req, res) {
+    try {
+      const questionTest = await QuestionTestService.questionTestGetById(
+        req.params.id
+      );
+      if (!questionTest) {
+        return res
+          .status(404)
+          .json({ status: 404, message: "Không tìm thấy thông tin câu hỏi" });
+      }
+      res.status(200).json(questionTest);
+    } catch (error) {
+      res.status(500).json({ status: 500, error: error.message });
+    }
+  }
+
+  async updateQuestionTest(req, res) {
+    try {
+      const updatedQuestionTest = await QuestionTestService.questionTestUpdate(
+        req.params.id,
+        req.body
+      );
+      res.status(200).json({ status: 200, updatedQuestionTest });
+    } catch (error) {
+      res.status(400).json({ status: 400, error: error.message });
+    }
+  }
+
+  async deleteQuestionTest(req, res) {
+    try {
+      await QuestionTestService.questionTestDelete(req.params.id);
+      res
+        .status(200)
+        .json({ status: 200, message: "Câu hỏi đã được xóa thành công" });
+    } catch (error) {
+      res.status(400).json({ status: 400, error: error.message });
+    }
+  }
+
+  async getQuestionTestByTestSetId(req, res) {
+    try {
+      const { setId } = req.body;
+      const questionTests =
+        await QuestionTestService.questionTestGetByTestSetId(setId);
+      res.status(200).json({
+        status: 200,
+        totalQuestions: questionTests.length,
+        questionTests: questionTests.map((q) => ({
+          test_set_id: q.test_set_id,
+          part_number: q.part_number,
+          question_number: q.question_number,
+          question_text: q.question_text,
+          audio_url: q.audio_url,
+          image_url: q.image_url,
+          passage_text: q.passage_text,
+          options: q.options,
+          is_active: q.is_active,
+        })),
+      });
+    } catch (error) {
+      res.status(500).json({ status: 500, error: error.message });
+    }
+  }
+
+  //KẾT THÚC PHẦN CÂU HỎI CHO BỘ ĐỀ THI
+
+  // PHẦN LÀM BÀI KIỂM TRA
+
+  async createAttempt(req, res) {
+    const testSetId = req.body.testSetId;
+    const userId = req.user.user_id;
+    const totalQuestions =
+      await QuestionTestService.getTotalQuestionsByTestSetId(testSetId);
+
+    if (!testSetId || !userId || !totalQuestions) {
+      return res.status(400).json({
+        status: 400,
+        error: "Thiếu thông tin cần thiết để tạo bài kiểm tra",
+      });
+    }
+    if (totalQuestions <= 0) {
+      return res.status(400).json({
+        status: 400,
+        error:
+          "Không có câu hỏi nào trong bộ đề thi này hoặc lỗi trong quá trình lấy câu hỏi",
+      });
+    }
+    try {
+      const attemptData = {
+        user_id: userId,
+        test_set_id: testSetId,
+        total_questions: totalQuestions,
+      };
+      const testAttempt = await TestAttemptService.createAttempt(attemptData);
+      res.status(201).json({
+        status: 201,
+        testAttempt: {
+          attempt_id: testAttempt.attempt_id,
+          user_id: testAttempt.user_id,
+          test_set_id: testAttempt.test_set_id,
+          total_questions: testAttempt.total_questions,
+          status: testAttempt.status,
+          started_at: testAttempt.started_at,
+        },
+      });
+    } catch (error) {
+      res.status(400).json({ status: 400, error: error.message });
+    }
+  }
+
+  async submitTest(req, res) {
+    const userId = req.user.user_id;
+    const { attemptId, answers } = req.body;
+
+    if (!Array.isArray(answers) || !answers.length) {
+      return res
+        .status(400)
+        .json({ status: 400, error: "Dữ liệu answers không hợp lệ" });
+    }
+
+    try {
+
+      const questionIds = answers.map((a) => a.questionId);
+      const questionTests = await QuestionTestService.questionTestsGetByMultipleId(questionIds);
+      if (!Array.isArray(questionTests)) {
+        return res
+          .status(500)
+          .json({ status: 500, error: "Dữ liệu câu hỏi không hợp lệ" });
+      }
+
+      const correctAnswerMap = new Map(questionTests.map((q) => [q.question_id, q.correct_answer]));
+
+      console.log("Correct Answer Map:", correctAnswerMap);
+
+      let correctCount = 0;
+      answers.forEach((a) => {
+        const correct = correctAnswerMap.get(a.questionId);
+        if (a.userAnswer === correct) {
+          correctCount++;
+        }
+      });
+
+      const valuesToInsert = answers.map((a) => {
+        const correct = correctAnswerMap.get(a.questionId);
+        return {
+          user_id: userId,
+          attempt_id: attemptId,
+          question_id: a.questionId,
+          user_answer: a.userAnswer,
+          is_correct: a.userAnswer === correct,
+          time_taken_seconds: a.timeTaken || null,
+        };
+      });
+
+      const testAnswers = await TestAnswerService.createAnswer(valuesToInsert);
+
+      const resultWithCorrect = testAnswers.map((a) => ({
+        ...a.dataValues,
+        correct_answer: correctAnswerMap.get(a.question_id),
+      }));
+
+      return res.status(200).json({
+        status: 200,
+        message: "Nộp bài thành công",
+        answers: resultWithCorrect,
+      });
+    } catch (error) {
+      console.error("Lỗi khi nộp bài kiểm tra:", error);
+      return res.status(500).json({
+        status: 500,
+        error: "Lỗi khi nộp bài kiểm tra",
+        details: error.message,
+      });
     }
   }
 }
