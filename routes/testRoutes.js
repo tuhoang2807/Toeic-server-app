@@ -20,7 +20,7 @@ router.get('/question-test/get-by-id/:id', authenticate, TestController.getQuest
 router.post('/question-test/create', authenticate, isAdmin, TestController.createQuestionTest);
 router.put('/question-test/update/:id', authenticate, isAdmin, TestController.updateQuestionTest);
 router.delete('/question-test/delete/:id', authenticate, isAdmin, TestController.deleteQuestionTest);
-router.get('/question-test/get-by-test-set-id', authenticate, TestController.getQuestionTestByTestSetId);
+router.get('/question-test/get-by-test-set-id/:testSetId', authenticate, TestController.getQuestionTestByTestSetId);
 
 //USER TEST ATTEMPTS ROUTES
 router.post('/test-attempt/create', authenticate, TestController.createAttempt);

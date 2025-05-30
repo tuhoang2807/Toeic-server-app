@@ -135,7 +135,7 @@ class TestController {
 
   async getQuestionTestByTestSetId(req, res) {
     try {
-      const { setId } = req.body;
+      const { setId } = req.params;
       const questionTests =
         await QuestionTestService.questionTestGetByTestSetId(setId);
       res.status(200).json({
