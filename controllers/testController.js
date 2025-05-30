@@ -61,24 +61,15 @@ class TestController {
   }
 
   async getTestSetsByType(req, res) {
-    try {
-      const { type } = req.body;
-      const testSets = await TestSetService.getTestSetsByType(type);
-      res.status(200).json({
-        status: 200,
-        data: testSets.map((t) => ({
-          test_set_id: t.test_set_id,
-          name: t.name,
-          type: t.type,
-          description: t.description,
-          created_at: t.created_at,
-          is_active: t.is_active,
-        })),
-      });
-    } catch (error) {
-      res.status(500).json({ status: 500, error: error.message });
-    }
+  try {
+    const { type } = req.params;
+    const userId = req.user.user_id;
+    const testSets = await TestSetService.getTestSetsByType(type, userId);
+    return res.status(200).json(testSets);
+  } catch (error) {
+    res.status(500).json({ status: 500, error: error.message });
   }
+}
 
   //KẾT THÚC PHẦN ĐỀ THI
 
@@ -309,10 +300,25 @@ class TestController {
         answers: resultWithCorrect,
       });
     } catch (error) {
-      console.error("Lỗi khi nộp bài kiểm tra:", error);
       return res.status(500).json({
         status: 500,
         error: "Lỗi khi nộp bài kiểm tra",
+        details: error.message,
+      });
+    }
+  }
+
+  async getStatisticalTest(req, res) {
+    try {
+      const userId = req.user.user_id;
+      const statisticalTest = await QuestionTestService.getStatisticalTest(
+        userId
+      );
+      return res.status(200).json({ status: 200, statisticalTest });
+    } catch (error) {
+      return res.status(500).json({
+        status: 500,
+        error: "Lỗi khi thống kê kết quả bài kiểm tra",
         details: error.message,
       });
     }

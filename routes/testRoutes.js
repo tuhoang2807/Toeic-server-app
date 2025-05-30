@@ -11,7 +11,7 @@ router.get('/test-set/get-all', authenticate,isAdmin ,TestController.getAllTestS
 router.get('/test-set/get-by-id/:id', authenticate,isAdmin, TestController.getTestSetById);
 router.put('/test-set/update/:id', authenticate,isAdmin ,TestController.updateTestSet);
 router.delete('/test-set/delete/:id', authenticate,isAdmin,TestController.deleteTestSet);
-router.get('/test-set/get-by-type', authenticate, TestController.getTestSetsByType);
+router.get('/test-set/get-by-type/:type', authenticate, TestController.getTestSetsByType);
 
 
 //QUESTION TEST ROUTES
@@ -25,6 +25,7 @@ router.get('/question-test/get-by-test-set-id', authenticate, TestController.get
 //USER TEST ATTEMPTS ROUTES
 router.post('/test-attempt/create', authenticate, TestController.createAttempt);
 router.post('/submit', authenticate, TestController.submitTest);
+router.get('/statistical-test', authenticate, TestController.getStatisticalTest);
 
 
 module.exports = router;
