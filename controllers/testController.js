@@ -61,15 +61,15 @@ class TestController {
   }
 
   async getTestSetsByType(req, res) {
-  try {
-    const { type } = req.params;
-    const userId = req.user.user_id;
-    const testSets = await TestSetService.getTestSetsByType(type, userId);
-    return res.status(200).json(testSets);
-  } catch (error) {
-    res.status(500).json({ status: 500, error: error.message });
+    try {
+      const { type } = req.params;
+      const userId = req.user.user_id;
+      const testSets = await TestSetService.getTestSetsByType(type, userId);
+      return res.status(200).json(testSets);
+    } catch (error) {
+      res.status(500).json({ status: 500, error: error.message });
+    }
   }
-}
 
   //KẾT THÚC PHẦN ĐỀ THI
 
@@ -135,7 +135,8 @@ class TestController {
 
   async getQuestionTestByTestSetId(req, res) {
     try {
-      const { setId } = req.params;
+      const setId = req.body.setId;
+      console.log("s:", setId); 
       const questionTests =
         await QuestionTestService.questionTestGetByTestSetId(setId);
       res.status(200).json({
@@ -163,22 +164,15 @@ class TestController {
   // PHẦN LÀM BÀI KIỂM TRA
 
   async createAttempt(req, res) {
-    const { testSetId, TimeTaken } = req.body;
+    const { testSetId } = req.body;
     const userId = req.user.user_id;
-    const totalQuestions =
-      await QuestionTestService.getTotalQuestionsByTestSetId(testSetId);
-
-    if (!testSetId || !userId || !totalQuestions) {
-      return res.status(400).json({
-        status: 400,
-        error: "Thiếu thông tin cần thiết để tạo bài kiểm tra",
-      });
-    }
+    const totalQuestions = await QuestionTestService.getTotalQuestionsByTestSetId(testSetId);
+    console.log("totalQuestions", totalQuestions);
     if (totalQuestions <= 0) {
       return res.status(400).json({
         status: 400,
         error:
-          "Không có câu hỏi nào trong bộ đề thi này hoặc lỗi trong quá trình lấy câu hỏi",
+          "Không có câu hỏi nào trong bộ đề thi",
       });
     }
     try {
