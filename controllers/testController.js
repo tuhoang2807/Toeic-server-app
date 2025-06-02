@@ -143,6 +143,7 @@ class TestController {
         status: 200,
         totalQuestions: questionTests.length,
         questionTests: questionTests.map((q) => ({
+          question_id: q.question_id,
           test_set_id: q.test_set_id,
           part_number: q.part_number,
           question_number: q.question_number,
