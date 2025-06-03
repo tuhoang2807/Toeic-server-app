@@ -25,7 +25,7 @@ router.post('/question-test/get-by-test-set-id', authenticate, TestController.ge
 //USER TEST ATTEMPTS ROUTES
 router.post('/test-attempt/create', authenticate, TestController.createAttempt);
 router.post('/submit', authenticate, TestController.submitTest);
-router.get('/statistical-test', authenticate, TestController.getStatisticalTest);
+router.post('/statistical-test', authenticate, TestController.getStatisticalTest);
 
 
 module.exports = router;
