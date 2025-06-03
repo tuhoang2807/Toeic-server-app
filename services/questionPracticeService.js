@@ -1,4 +1,6 @@
 const QuestionPractice = require("../models/questionPractice");
+const StudyTimeLog = require("../models/studyTimeLog");
+const { Sequelize } = require('sequelize');
 const sequelize = require("../config/db");
 
 class QuestionPracticeService {
@@ -116,6 +118,42 @@ class QuestionPracticeService {
     );
 
     return stats;
+  }
+
+  async getStudyTimeLast7Days(userId) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const studyTimes = await StudyTimeLog.findAll({
+      where: {
+        user_id: userId,
+        activity_type: "practice",
+        study_date: {
+          [Sequelize.Op.gte]: sevenDaysAgo.toISOString().split("T")[0],
+        },
+      },
+      attributes: [
+        "study_date",
+        [
+          Sequelize.fn("SUM", Sequelize.col("study_time_minutes")),
+          "total_minutes",
+        ],
+      ],
+      group: ["study_date"],
+      order: [["study_date", "ASC"]],
+    });
+    const result = {};
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+      result[dateStr] = 0;
+    }
+    studyTimes.forEach((record) => {
+      result[record.study_date] =
+        parseInt(record.dataValues.total_minutes) || 0;
+    });
+
+    return Object.entries(result).map(([date, minutes]) => ({ date, minutes }));
   }
 }
 

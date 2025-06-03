@@ -1,7 +1,6 @@
 const QuestionPracticeService = require("../services/questionPracticeService");
 const PracticeSessionsService = require("../services/practiceSessionsService");
 const PracticeAnSwerService = require("../services/practiceAnSwerService");
-const SkillService = require("../services/skillService");
 
 class QuestionPracticeController {
   async questionPracticeGetAll(req, res) {
@@ -307,6 +306,20 @@ class QuestionPracticeController {
       res.status(500).json({
         status: 500,
         message: "Lỗi khi lấy tổng số câu hỏi theo chủ đề.",
+        error: err.message,
+      });
+    }
+  }
+
+  async getStudyTimeLast7Days(req, res) {
+    try {
+      const userId = req.user.user_id;
+      const timeLog = await QuestionPracticeService.getStudyTimeLast7Days(userId);
+      res.status(200).json({ status: 200, timeLog });
+    } catch (err) {
+      res.status(500).json({
+        status: 500,
+        message: "Lỗi khi lấy kỹ năng theo chủ đề.",
         error: err.message,
       });
     }

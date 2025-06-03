@@ -17,4 +17,6 @@ router.post('/practice-session-result', authenticate, questionPracticeController
 router.get('/practice-statistical', authenticate, questionPracticeController.getPracticeStatistical);
 router.post('/question-practice/get-total-question-by-topic-and-skill', authenticate, questionPracticeController.getTotalQuestionByTopicAndSkill);
 
+
+router.get('/study-time-last-7-days', authenticate, questionPracticeController.getStudyTimeLast7Days);
 module.exports = router;

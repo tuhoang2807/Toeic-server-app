@@ -136,7 +136,6 @@ class TestController {
   async getQuestionTestByTestSetId(req, res) {
     try {
       const setId = req.body.setId;
-      console.log("s:", setId); 
       const questionTests =
         await QuestionTestService.questionTestGetByTestSetId(setId);
       res.status(200).json({
@@ -167,13 +166,12 @@ class TestController {
   async createAttempt(req, res) {
     const { testSetId } = req.body;
     const userId = req.user.user_id;
-    const totalQuestions = await QuestionTestService.getTotalQuestionsByTestSetId(testSetId);
-    console.log("totalQuestions", totalQuestions);
+    const totalQuestions =
+      await QuestionTestService.getTotalQuestionsByTestSetId(testSetId);
     if (totalQuestions <= 0) {
       return res.status(400).json({
         status: 400,
-        error:
-          "Không có câu hỏi nào trong bộ đề thi",
+        error: "Không có câu hỏi nào trong bộ đề thi",
       });
     }
     try {
@@ -305,9 +303,11 @@ class TestController {
 
   async getStatisticalTest(req, res) {
     try {
+      const { type } = req.body;
       const userId = req.user.user_id;
       const statisticalTest = await QuestionTestService.getStatisticalTest(
-        userId
+        userId,
+        type
       );
       return res.status(200).json({ status: 200, statisticalTest });
     } catch (error) {
