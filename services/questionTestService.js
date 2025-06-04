@@ -68,17 +68,6 @@ class QuestionTestService {
           WHERE ta.user_id = :user_id 
             AND ts.type = :type 
             AND ta.status = 'completed'
-        ),
-        AccuracyPerAttempt AS (
-          SELECT 
-            la.attempt_id,
-            COALESCE(SUM(tan.is_correct) / NULLIF(COUNT(tan.answer_id), 0), 0) AS attempt_accuracy,
-            (10.0 / la.total_questions) * la.correct_answers AS attempt_score,
-            la.time_taken_seconds
-          FROM LatestAttempts la
-          LEFT JOIN test_answers tan ON la.attempt_id = tan.attempt_id
-          WHERE la.rn = 1
-          GROUP BY la.attempt_id, la.total_questions, la.correct_answers, la.time_taken_seconds
         )
         SELECT 
           :type AS type,
@@ -90,11 +79,17 @@ class QuestionTestService {
                  (SELECT COUNT(*) 
                   FROM test_sets 
                   WHERE type = :type AND is_active = TRUE)) AS completion_ratio,
-          COALESCE(ROUND(AVG(apa.attempt_accuracy) * 100, 2), 0) AS accuracy_rate,
-          COALESCE(ROUND(AVG(apa.attempt_score), 2), 0) AS average_score,
-          COALESCE(ROUND(AVG(apa.time_taken_seconds), 0), 0) AS average_time
+          
+          -- Tính accuracy: Tổng câu đúng / Tổng câu hỏi của tất cả bài test đã làm
+          CASE 
+            WHEN SUM(la.total_questions) > 0 THEN 
+              ROUND((SUM(la.correct_answers) * 100.0) / SUM(la.total_questions), 2)
+            ELSE 0 
+          END AS accuracy_rate,
+          
+          COALESCE(ROUND(AVG((10.0 / la.total_questions) * la.correct_answers), 2), 0) AS average_score,
+          COALESCE(ROUND(AVG(la.time_taken_seconds), 0), 0) AS average_time
         FROM LatestAttempts la
-        LEFT JOIN AccuracyPerAttempt apa ON la.attempt_id = apa.attempt_id
         WHERE la.rn = 1;
       `,
         {
@@ -118,7 +113,9 @@ class QuestionTestService {
         `Lỗi trong quá trình lấy thống kê của ${user_id} and type ${type}:`,
         error
       );
-      throw new Error(`Lỗi trong quá trình lấy thống kê của ${user_id}: ${error.message}`);
+      throw new Error(
+        `Lỗi trong quá trình lấy thống kê của ${user_id}: ${error.message}`
+      );
     }
   }
 }

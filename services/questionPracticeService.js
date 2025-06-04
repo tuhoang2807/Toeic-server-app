@@ -43,27 +43,56 @@ class QuestionPracticeService {
   async getPracticeStatistical(userId) {
     const stats = await sequelize.query(
       `
-    SELECT 
-      s.skill_id,
-      s.name,
-      COUNT(DISTINCT q.question_id) AS total_questions,
-      COUNT(DISTINCT CASE WHEN ps.user_id = :userId THEN pa.question_id END) AS attempted,
-      SUM(CASE WHEN ps.user_id = :userId AND pa.is_correct = true THEN 1 ELSE 0 END) AS correct,
-      CASE 
-        WHEN COUNT(DISTINCT CASE WHEN ps.user_id = :userId THEN pa.question_id END) = 0 THEN 0
-        ELSE ROUND(
-          SUM(CASE WHEN ps.user_id = :userId AND pa.is_correct = true THEN 1 ELSE 0 END) * 100.0 /
-          COUNT(DISTINCT CASE WHEN ps.user_id = :userId THEN pa.question_id END), 
-          2
-        )
-      END AS accuracy
-    FROM skills s
-    LEFT JOIN questions_practice q ON q.skill_id = s.skill_id
-    LEFT JOIN practice_answers pa ON pa.question_id = q.question_id
-    LEFT JOIN practice_sessions ps ON ps.session_id = pa.session_id
-    GROUP BY s.skill_id, s.name
-    ORDER BY s.skill_id;
-    `,
+      WITH latest_practice_answers AS (
+          SELECT 
+              pa.question_id,
+              pa.user_id,
+              pa.is_correct,
+              q.skill_id,
+              ROW_NUMBER() OVER (
+                  PARTITION BY pa.question_id, pa.user_id 
+                  ORDER BY pa.answered_at DESC
+              ) as rn
+          FROM practice_answers pa
+          JOIN questions_practice q ON pa.question_id = q.question_id
+          WHERE pa.user_id = :userId
+      )
+      SELECT 
+          s.skill_id,
+          s.name,
+          COUNT(DISTINCT q.question_id) AS total_questions,
+          
+          COUNT(DISTINCT CASE 
+              WHEN lpa.user_id = :userId THEN lpa.question_id 
+              ELSE NULL 
+          END) AS attempted,
+          
+          COALESCE(SUM(CASE 
+              WHEN lpa.is_correct = TRUE AND lpa.rn = 1 THEN 1 
+              ELSE 0 
+          END), 0) AS correct,
+          
+          CASE 
+              WHEN COUNT(DISTINCT CASE WHEN lpa.user_id = :userId THEN lpa.question_id ELSE NULL END) = 0 THEN 0
+              ELSE ROUND(
+                  COALESCE(SUM(CASE 
+                      WHEN lpa.is_correct = TRUE AND lpa.rn = 1 THEN 1 
+                      ELSE 0 
+                  END), 0) * 100.0 / 
+                  COUNT(DISTINCT CASE WHEN lpa.user_id = :userId THEN lpa.question_id ELSE NULL END),
+                  2
+              )
+          END AS accuracy
+          
+      FROM skills s
+      LEFT JOIN questions_practice q ON q.skill_id = s.skill_id 
+          AND q.is_active = TRUE
+      LEFT JOIN latest_practice_answers lpa ON q.question_id = lpa.question_id 
+          AND lpa.rn = 1
+      WHERE s.is_active = TRUE
+      GROUP BY s.skill_id, s.name
+      ORDER BY s.skill_id;
+      `,
       {
         replacements: { userId },
         type: sequelize.QueryTypes.SELECT,
