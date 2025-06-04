@@ -82,30 +82,34 @@ class QuestionPracticeService {
   async getTotalQuestionByTopicAndSkill(userId, skillId) {
     const stats = await sequelize.query(
       `
+      WITH LatestAnswers AS (
+          SELECT 
+              pa.question_id,
+              pa.is_correct,
+              ROW_NUMBER() OVER (PARTITION BY pa.question_id ORDER BY pa.created_at DESC) AS rn
+          FROM practice_answers pa
+          WHERE pa.user_id = :userId
+      )
       SELECT 
           t.topic_id,
           t.name AS topic_name,
           t.slug AS topic_slug,
           COUNT(DISTINCT qp.question_id) AS total_questions,
-
-          COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) AS answered_questions,
-
-          COALESCE(SUM(CASE WHEN pa.user_id = :userId AND pa.is_correct = TRUE THEN 1 ELSE 0 END), 0) AS correct_answers,
-
+          COUNT(DISTINCT CASE WHEN la.rn = 1 THEN la.question_id ELSE NULL END) AS answered_questions,
+          COALESCE(SUM(CASE WHEN la.rn = 1 AND la.is_correct = TRUE THEN 1 ELSE 0 END), 0) AS correct_answers,
           CASE 
-              WHEN COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) = 0 THEN 0
+              WHEN COUNT(DISTINCT CASE WHEN la.rn = 1 THEN la.question_id ELSE NULL END) = 0 THEN 0
               ELSE ROUND(
-                  COALESCE(SUM(CASE WHEN pa.user_id = :userId AND pa.is_correct = TRUE THEN 1 ELSE 0 END), 0) * 100.0 /
-                  COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END),
+                  COALESCE(SUM(CASE WHEN la.rn = 1 AND la.is_correct = TRUE THEN 1 ELSE 0 END), 0) * 100.0 /
+                  COUNT(DISTINCT CASE WHEN la.rn = 1 THEN la.question_id ELSE NULL END),
                   2
               )
           END AS accuracy_percentage
-
       FROM topics t
       LEFT JOIN questions_practice qp ON t.topic_id = qp.topic_id
           AND qp.is_active = TRUE
-      LEFT JOIN practice_answers pa ON qp.question_id = pa.question_id
-          AND pa.user_id = :userId
+      LEFT JOIN LatestAnswers la ON qp.question_id = la.question_id
+          AND la.rn = 1
       WHERE t.is_active = TRUE
         AND t.skill_id = :skillId
       GROUP BY t.topic_id, t.name, t.slug
@@ -117,7 +121,7 @@ class QuestionPracticeService {
       }
     );
     return stats;
-  }
+}
 
   async getStudyTimeLast7Days(userId) {
     const sevenDaysAgo = new Date();
