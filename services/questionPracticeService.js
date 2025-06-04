@@ -88,15 +88,15 @@ class QuestionPracticeService {
           t.slug AS topic_slug,
           COUNT(DISTINCT qp.question_id) AS total_questions,
 
-          COUNT(CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) AS answered_questions,
+          COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) AS answered_questions,
 
           COALESCE(SUM(CASE WHEN pa.user_id = :userId AND pa.is_correct = TRUE THEN 1 ELSE 0 END), 0) AS correct_answers,
 
           CASE 
-              WHEN COUNT(CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) = 0 THEN 0
+              WHEN COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END) = 0 THEN 0
               ELSE ROUND(
                   COALESCE(SUM(CASE WHEN pa.user_id = :userId AND pa.is_correct = TRUE THEN 1 ELSE 0 END), 0) * 100.0 /
-                  COUNT(CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END),
+                  COUNT(DISTINCT CASE WHEN pa.user_id = :userId THEN pa.question_id ELSE NULL END),
                   2
               )
           END AS accuracy_percentage

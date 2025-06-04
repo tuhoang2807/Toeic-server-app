@@ -116,6 +116,7 @@ class QuestionPracticeController {
       res.status(200).json({
         status: 200,
         session_id: session.session_id,
+        total_questions: questions.length,
         questions: questions.map((q) => ({
           question_id: q.question_id,
           question_text: q.question_text,
@@ -128,6 +129,37 @@ class QuestionPracticeController {
       res.status(500).json({
         status: 500,
         message: "Lỗi khi lấy câu hỏi",
+        error: err.message,
+      });
+    }
+  }
+
+  async deleteSession(req, res) {
+    try {
+      const sessionId = req.params.id;
+      const userId = req.user.user_id;
+      if (!sessionId) {
+        return res.status(400).json({
+          status: 400,
+          message: "Thiếu sessionId",
+        });
+      }
+
+      const result = await PracticeSessionsService.deleteSession(
+        sessionId,
+        userId
+      );
+      if (result === 0) {
+        return res.status(404).json({
+          status: 404,
+          message: "Không tìm thấy phiên làm bài để xóa.",
+        });
+      }
+      res.status(200).json({ status: 200, message: "Xóa phiên làm bài thành công." });
+    } catch (err) {
+      res.status(500).json({
+        status: 500,
+        message: "Lỗi khi xóa phiên làm bài.",
         error: err.message,
       });
     }

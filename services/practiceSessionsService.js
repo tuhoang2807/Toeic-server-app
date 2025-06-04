@@ -11,21 +11,29 @@ class PracticeSessionsService {
   }
 
   async updateSession(sessionId, data, userId) {
-  await PracticeSession.update(data, {
-    where: {
-      session_id: sessionId,
-      user_id: userId,
-    },
-  });
+    await PracticeSession.update(data, {
+      where: {
+        session_id: sessionId,
+        user_id: userId,
+      },
+    });
 
-  return await PracticeSession.findOne({
-    where: {
-      session_id: sessionId,
-      user_id: userId,
-    },
-  });
-}
+    return await PracticeSession.findOne({
+      where: {
+        session_id: sessionId,
+        user_id: userId,
+      },
+    });
+  }
 
+  async deleteSession(sessionId, userId) {
+    return await PracticeSession.destroy({
+      where: {
+        session_id: sessionId,
+        user_id: userId,
+      },
+    });
+  }
 }
 
 module.exports = new PracticeSessionsService();

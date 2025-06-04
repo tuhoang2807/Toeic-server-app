@@ -19,4 +19,6 @@ router.post('/question-practice/get-total-question-by-topic-and-skill', authenti
 
 
 router.get('/study-time-last-7-days', authenticate, questionPracticeController.getStudyTimeLast7Days);
+router.delete('/delete-session/:id', authenticate, questionPracticeController.deleteSession);
+
 module.exports = router;
