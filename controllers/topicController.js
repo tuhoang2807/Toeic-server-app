@@ -7,7 +7,6 @@ class TopicController {
       if (!name || !description || !skill_id) {
         return res.status(400).json({ error: "Yêu cầu nhập đầy đủ thông tin" });
       }
-      console.log("body", req.body);
       const topic = await TopicService.createTopic({
         skill_id,
         name,

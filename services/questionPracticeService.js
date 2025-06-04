@@ -82,46 +82,63 @@ class QuestionPracticeService {
   async getTotalQuestionByTopicAndSkill(userId, skillId) {
     const stats = await sequelize.query(
       `
-      WITH LatestAnswers AS (
+      WITH latest_answers AS (
           SELECT 
-              pa.question_id,
-              pa.is_correct,
-              ROW_NUMBER() OVER (PARTITION BY pa.question_id ORDER BY pa.created_at DESC) AS rn
-          FROM practice_answers pa
-          WHERE pa.user_id = :userId
+              question_id,
+              user_id,
+              is_correct,
+              ROW_NUMBER() OVER (
+                  PARTITION BY question_id, user_id 
+                  ORDER BY answered_at DESC
+              ) as rn
+          FROM practice_answers
+          WHERE user_id = :userId
       )
       SELECT 
           t.topic_id,
           t.name AS topic_name,
           t.slug AS topic_slug,
           COUNT(DISTINCT qp.question_id) AS total_questions,
-          COUNT(DISTINCT CASE WHEN la.rn = 1 THEN la.question_id ELSE NULL END) AS answered_questions,
-          COALESCE(SUM(CASE WHEN la.rn = 1 AND la.is_correct = TRUE THEN 1 ELSE 0 END), 0) AS correct_answers,
+          
+          COUNT(DISTINCT CASE 
+              WHEN la.user_id = :userId THEN la.question_id 
+              ELSE NULL 
+          END) AS answered_questions,
+          
+          COALESCE(SUM(CASE 
+              WHEN la.is_correct = TRUE AND la.rn = 1 THEN 1 
+              ELSE 0 
+          END), 0) AS correct_answers,
+          
           CASE 
-              WHEN COUNT(DISTINCT CASE WHEN la.rn = 1 THEN la.question_id ELSE NULL END) = 0 THEN 0
+              WHEN COUNT(DISTINCT CASE WHEN la.user_id = :userId THEN la.question_id ELSE NULL END) = 0 THEN 0
               ELSE ROUND(
-                  COALESCE(SUM(CASE WHEN la.rn = 1 AND la.is_correct = TRUE THEN 1 ELSE 0 END), 0) * 100.0 /
-                  COUNT(DISTINCT CASE WHEN la.rn = 1 THEN la.question_id ELSE NULL END),
+                  COALESCE(SUM(CASE 
+                      WHEN la.is_correct = TRUE AND la.rn = 1 THEN 1 
+                      ELSE 0 
+                  END), 0) * 100.0 / 
+                  COUNT(DISTINCT CASE WHEN la.user_id = :userId THEN la.question_id ELSE NULL END),
                   2
               )
           END AS accuracy_percentage
+
       FROM topics t
-      LEFT JOIN questions_practice qp ON t.topic_id = qp.topic_id
+      LEFT JOIN questions_practice qp ON t.topic_id = qp.topic_id 
           AND qp.is_active = TRUE
-      LEFT JOIN LatestAnswers la ON qp.question_id = la.question_id
+      LEFT JOIN latest_answers la ON qp.question_id = la.question_id 
           AND la.rn = 1
       WHERE t.is_active = TRUE
         AND t.skill_id = :skillId
       GROUP BY t.topic_id, t.name, t.slug
       ORDER BY t.topic_id ASC;
-    `,
+      `,
       {
         replacements: { userId, skillId },
         type: sequelize.QueryTypes.SELECT,
       }
     );
     return stats;
-}
+  }
 
   async getStudyTimeLast7Days(userId) {
     const sevenDaysAgo = new Date();
