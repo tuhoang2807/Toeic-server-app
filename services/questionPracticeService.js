@@ -204,6 +204,18 @@ class QuestionPracticeService {
 
     return Object.entries(result).map(([date, minutes]) => ({ date, minutes }));
   }
+
+  async createStudyTimeLog(studyTimeData) {
+    return await StudyTimeLog.create({
+      user_id: studyTimeData.user_id,
+      activity_type: studyTimeData.activity_type,
+      skill_id: studyTimeData.skill_id,
+      topic_id: studyTimeData.topic_id,
+      session_id: studyTimeData.session_id,
+      study_time_minutes: studyTimeData.study_time_minutes,
+      study_date: studyTimeData.study_date,
+    });
+  }
 }
 
 module.exports = new QuestionPracticeService();

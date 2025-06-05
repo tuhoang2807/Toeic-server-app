@@ -155,7 +155,9 @@ class QuestionPracticeController {
           message: "Không tìm thấy phiên làm bài để xóa.",
         });
       }
-      res.status(200).json({ status: 200, message: "Xóa phiên làm bài thành công." });
+      res
+        .status(200)
+        .json({ status: 200, message: "Xóa phiên làm bài thành công." });
     } catch (err) {
       res.status(500).json({
         status: 500,
@@ -197,7 +199,7 @@ class QuestionPracticeController {
         is_correct: isCorrect,
         time_taken_seconds: time_taken_seconds,
       };
-     
+
       const savedAnswer = await PracticeAnSwerService.answerQuestion(data);
       return res.status(200).json({
         status: 200,
@@ -218,7 +220,7 @@ class QuestionPracticeController {
 
   async getPracticeSessionResult(req, res) {
     try {
-      const { sessionId , totalTime } = req.body;
+      const { sessionId, totalTime } = req.body;
       const userId = req.user.user_id;
       if (!sessionId) {
         return res.status(400).json({
@@ -252,6 +254,17 @@ class QuestionPracticeController {
         data,
         userId
       );
+      console.log("Session data:", session.totalTime);
+
+      await QuestionPracticeService.createStudyTimeLog({
+        user_id: userId,
+        activity_type: "practice",
+        skill_id: session.skill_id,
+        topic_id: session.topic_id,
+        session_id: session.session_id,
+        study_time_minutes: totalTime/60,
+        study_date: new Date(session.completed_at).toISOString().split("T")[0],
+      });
 
       res.status(200).json({
         status: 200,
@@ -261,7 +274,6 @@ class QuestionPracticeController {
           user_id: session.user_id,
           skill_id: session.skill_id,
           topic_id: session.topic_id,
-          total_questions: totalQuestions,
           correct_answers: correctAnswers,
           wrong_answers: wrongAnswers,
           total_time_seconds: totalTime,
@@ -292,7 +304,7 @@ class QuestionPracticeController {
       });
     }
   }
-  
+
   async getTotalQuestionByTopicAndSkill(req, res) {
     try {
       const { skillId } = req.body;
@@ -305,7 +317,11 @@ class QuestionPracticeController {
         });
       }
 
-      const totalQuestions = await QuestionPracticeService.getTotalQuestionByTopicAndSkill( userId,skillId );
+      const totalQuestions =
+        await QuestionPracticeService.getTotalQuestionByTopicAndSkill(
+          userId,
+          skillId
+        );
       res.status(200).json({
         status: 200,
         total_questions: totalQuestions,
@@ -346,7 +362,9 @@ class QuestionPracticeController {
   async getStudyTimeLast7Days(req, res) {
     try {
       const userId = req.user.user_id;
-      const timeLog = await QuestionPracticeService.getStudyTimeLast7Days(userId);
+      const timeLog = await QuestionPracticeService.getStudyTimeLast7Days(
+        userId
+      );
       res.status(200).json({ status: 200, timeLog });
     } catch (err) {
       res.status(500).json({
