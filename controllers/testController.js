@@ -7,7 +7,20 @@ class TestController {
   // PHẦN ĐỀ THI
   async createTestSet(req, res) {
     try {
-      const testSet = await TestSetService.createTestSet(req.body);
+      const { name, type, description } = req.body;
+      const isFull = type === "full_test";
+      console.log(req.user," user info");
+      const testSet = await TestSetService.createTestSet({
+        name,
+        type,
+        total_questions: isFull ? 50 : 20,
+        time_limit: isFull ? 60 : 30,
+        description,
+        is_active: false,
+        created_by: req.user.user_id,
+      });
+      
+
       res.status(201).json({ status: 201, testSet });
     } catch (error) {
       res.status(400).json({ status: 400, error: error.message });
@@ -76,10 +89,43 @@ class TestController {
   // PHẦN CÂU HỎI CHO BỘ ĐỀ THI
   async createQuestionTest(req, res) {
     try {
+      const { test_set_id } = req.body;
+
+      const testSet = await TestSetService.getTestSetById(test_set_id);
+      if (!testSet) {
+        return res
+          .status(404)
+          .json({ status: 404, message: "Bộ đề không tồn tại" });
+      }
+      const requiredQuestions = testSet.type === "mini_test" ? 20 : 50;
+      const currentCountBefore = await QuestionTestService.getTotalQuestionsByTestSetId(
+        test_set_id
+      );
+      if (currentCountBefore >= requiredQuestions) {
+        return res.status(400).json({
+          status: 400,
+          message: `Bộ đề đã đủ ${requiredQuestions} câu hỏi, không thể thêm nữa.`,
+        });
+      }
       const questionTest = await QuestionTestService.questionTestCreate(
         req.body
       );
-      res.status(201).json({ status: 201, questionTest });
+      const currentCountAfter = currentCountBefore + 1;
+      if (currentCountAfter === requiredQuestions) {
+        await TestSetService.updateTestSet(test_set_id, { is_active: true });
+      }
+      res.status(201).json({
+        status: 201,
+        questionTest,
+        currentCount: currentCountAfter,
+        isActive: currentCountAfter === requiredQuestions,
+        message:
+          currentCountAfter === requiredQuestions
+            ? "Đã đủ số câu hỏi, bộ đề được kích hoạt."
+            : `Hiện có ${currentCountAfter} câu hỏi, cần thêm ${
+                requiredQuestions - currentCountAfter
+              } câu nữa để kích hoạt bộ đề.`,
+      });
     } catch (error) {
       res.status(400).json({ status: 400, error: error.message });
     }

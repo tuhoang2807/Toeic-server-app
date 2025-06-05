@@ -118,6 +118,13 @@ class QuestionTestService {
       );
     }
   }
+
+  async countByTestSetId(testSetId) {
+    const count = await QuestionTest.count({
+      where: { test_set_id: testSetId },
+    });
+    return count;
+  }
 }
 
 module.exports = new QuestionTestService();
