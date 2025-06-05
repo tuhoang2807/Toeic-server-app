@@ -216,6 +216,82 @@ class QuestionPracticeService {
       study_date: studyTimeData.study_date,
     });
   }
+
+  async getRank({ type, skill_id }) {
+    try {
+      let query;
+      let results;
+
+      if (skill_id) {
+        query = `
+          WITH UserCorrectAnswers AS (
+            SELECT 
+              pa.user_id,
+              pa.question_id,
+              MIN(pa.answered_at) AS first_correct_answer
+            FROM practice_answers pa
+            WHERE pa.is_correct = 1
+            GROUP BY pa.user_id, pa.question_id
+          )
+          SELECT 
+            ROW_NUMBER() OVER (ORDER BY COUNT(uca.question_id) DESC) AS stt,
+            u.full_name AS ho_va_ten,
+            s.name AS ky_nang,
+            CONCAT(COUNT(uca.question_id), '/', 
+              (SELECT COUNT(*) FROM questions_practice WHERE skill_id = :skill_id AND is_active = 1)) AS so_cau_dung_tong_so_cau
+          FROM users u
+          LEFT JOIN UserCorrectAnswers uca ON u.user_id = uca.user_id
+          JOIN skills s ON s.skill_id = :skill_id
+          WHERE u.is_active = 1
+            AND s.is_active = 1
+            AND (uca.question_id IS NULL OR EXISTS (
+              SELECT 1 
+              FROM questions_practice qp 
+              WHERE qp.question_id = uca.question_id 
+                AND qp.skill_id = :skill_id
+                AND qp.is_active = 1
+            ))
+          GROUP BY u.user_id, u.full_name, s.name
+          ORDER BY COUNT(uca.question_id) DESC
+          LIMIT 10;
+        `;
+        results = await sequelize.query(query, {
+          replacements: { skill_id },
+          type: sequelize.QueryTypes.SELECT,
+        });
+      } else if (type === "mini_test" || type === "full_test") {
+        query = `
+          SELECT 
+            ROW_NUMBER() OVER (ORDER BY SUM(ta.total_score) DESC) AS stt,
+            u.full_name AS ho_va_ten,
+            ts.type AS loai_hinh,
+            CONCAT(COUNT(ta.attempt_id), '/', 
+              (SELECT COUNT(*) FROM test_sets WHERE type = :type AND is_active = 1)) AS so_bai_da_lam_tong_so_bai,
+            ROUND(SUM(ta.total_score), 2) AS tong_diem
+          FROM users u
+          JOIN test_attempts ta ON u.user_id = ta.user_id
+          JOIN test_sets ts ON ta.test_set_id = ts.test_set_id
+          WHERE ts.type = :type
+            AND u.is_active = 1
+            AND ts.is_active = 1
+            AND ta.status = 'completed'
+          GROUP BY u.user_id, u.full_name, ts.type
+          ORDER BY SUM(ta.total_score) DESC
+          LIMIT 10;
+        `;
+        results = await sequelize.query(query, {
+          replacements: { type },
+          type: sequelize.QueryTypes.SELECT,
+        });
+      } else {
+        throw new Error("Invalid type or skill_id provided");
+      }
+
+      return results;
+    } catch (error) {
+      throw new Error(`Error fetching ranking: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new QuestionPracticeService();

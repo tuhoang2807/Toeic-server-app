@@ -262,7 +262,7 @@ class QuestionPracticeController {
         skill_id: session.skill_id,
         topic_id: session.topic_id,
         session_id: session.session_id,
-        study_time_minutes: totalTime/60,
+        study_time_minutes: totalTime / 60,
         study_date: new Date(session.completed_at).toISOString().split("T")[0],
       });
 
@@ -370,6 +370,23 @@ class QuestionPracticeController {
       res.status(500).json({
         status: 500,
         message: "Lỗi khi lấy kỹ năng theo chủ đề.",
+        error: err.message,
+      });
+    }
+  }
+
+  async getRank(req, res) {
+    try {
+      let { skillId, type } = req.body;
+      const rankData = await QuestionPracticeService.getRank({
+        skill_id: skillId,
+        type,
+      });
+      res.status(200).json({ status: 200, data: rankData });
+    } catch (err) {
+      res.status(500).json({
+        status: 500,
+        message: "Lỗi khi lấy bảng xếp hạng.",
         error: err.message,
       });
     }
