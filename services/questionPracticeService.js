@@ -265,7 +265,7 @@ class QuestionPracticeService {
             ROW_NUMBER() OVER (ORDER BY SUM(ta.total_score) DESC) AS stt,
             u.full_name AS ho_va_ten,
             ts.type AS loai_hinh,
-            CONCAT(COUNT(ta.attempt_id), '/', 
+            CONCAT(COUNT(DISTINCT ta.test_set_id), '/', 
               (SELECT COUNT(*) FROM test_sets WHERE type = :type AND is_active = 1)) AS so_bai_da_lam_tong_so_bai,
             ROUND(SUM(ta.total_score), 2) AS tong_diem
           FROM users u
